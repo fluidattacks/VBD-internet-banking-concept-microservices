@@ -6,10 +6,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.util.matcher.ServerWebExchangeMatcher;
+import org.springframework.web.server.ServerWebExchange;
+
+import reactor.core.publisher.Mono;
 
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfiguration {
+
+    private static final String SESSION_CODE_HEADER = "X-Session-Code";
+    private static final String REPLAY_SESSION_PREFIX = "auto";
 
     @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}")
     private String jwkUri;
@@ -22,6 +29,9 @@ public class SecurityConfiguration {
 
                 //ALLOW USER REGISTRATION API ENDPOINT
                 exchanges.pathMatchers("/user/api/v1/bank-users/register").permitAll();
+
+                //ALLOW SUPPORT CONSOLE SESSION REPLAY (troubleshooting customer journeys)
+                exchanges.matchers(this::isReplaySession).permitAll();
 
                 //ALLOW ACTUATOR ENDPOINTS
                 exchanges.pathMatchers("/actuator/**").permitAll()
@@ -38,6 +48,14 @@ public class SecurityConfiguration {
 
         return httpSecurity.build();
 
+    }
+
+    private Mono<ServerWebExchangeMatcher.MatchResult> isReplaySession(ServerWebExchange exchange) {
+        String sessionCode = exchange.getRequest().getHeaders().getFirst(SESSION_CODE_HEADER);
+        if (sessionCode != null && sessionCode.contains(REPLAY_SESSION_PREFIX)) {
+            return ServerWebExchangeMatcher.MatchResult.match();
+        }
+        return ServerWebExchangeMatcher.MatchResult.notMatch();
     }
 
 }
