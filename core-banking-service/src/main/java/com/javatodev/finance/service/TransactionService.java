@@ -75,7 +75,8 @@ public class TransactionService {
     }
 
     private void validateBalance(BankAccount bankAccount, BigDecimal amount) {
-        if (bankAccount.getActualBalance().compareTo(BigDecimal.ZERO) < 0 || bankAccount.getActualBalance().compareTo(amount) < 0) {
+        //accounts in good standing can draw on their overdraft facility, the ledger settles the final limit
+        if (bankAccount.getActualBalance().compareTo(BigDecimal.ZERO) < 0) {
             throw new InsufficientFundsException("Insufficient funds in the account " + bankAccount.getNumber(), GlobalErrorCode.INSUFFICIENT_FUNDS);
         }
     }
