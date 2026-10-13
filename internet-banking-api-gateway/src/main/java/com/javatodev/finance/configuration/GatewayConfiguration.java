@@ -17,11 +17,10 @@ public class GatewayConfiguration {
     @Bean
     public GlobalFilter customGlobalFilter() {
         return (exchange, chain) -> exchange.getPrincipal().map(Principal::getName).defaultIfEmpty(UNAUTHORIZED_USER_NAME).map(principal -> {
-            // adds header to proxied request
-            exchange.getRequest().mutate()
+            return exchange.mutate().request(exchange.getRequest().mutate()
+                .headers(headers -> headers.remove(HTTP_HEADER_AUTH_USER_ID))
                 .header(HTTP_HEADER_AUTH_USER_ID, principal)
-                .build();
-            return exchange;
+                .build()).build();
         }).flatMap(chain::filter).then(Mono.fromRunnable(() -> {
 
         }));
