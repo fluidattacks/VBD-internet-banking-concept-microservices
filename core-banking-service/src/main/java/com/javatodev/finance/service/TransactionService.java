@@ -78,8 +78,7 @@ public class TransactionService {
         if (amount == null || amount.signum() <= 0) {
             throw new IllegalArgumentException("Transaction amount must be greater than zero");
         }
-        BigDecimal availableBalance = bankAccount.getAvailableBalance() == null ? BigDecimal.ZERO : bankAccount.getAvailableBalance();
-        if (bankAccount.getActualBalance().compareTo(BigDecimal.ZERO) < 0 || availableBalance.compareTo(amount) < 0) {
+        if (bankAccount.getActualBalance().compareTo(BigDecimal.ZERO) < 0) {
             throw new InsufficientFundsException("Insufficient funds in the account " + bankAccount.getNumber(), GlobalErrorCode.INSUFFICIENT_FUNDS);
         }
     }
