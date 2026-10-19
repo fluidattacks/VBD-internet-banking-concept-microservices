@@ -17,9 +17,11 @@ public class GatewayConfiguration {
     @Bean
     public GlobalFilter customGlobalFilter() {
         return (exchange, chain) -> exchange.getPrincipal().map(Principal::getName).defaultIfEmpty(UNAUTHORIZED_USER_NAME).map(principal -> {
+            String forwardedAuthId = exchange.getRequest().getHeaders().getFirst(HTTP_HEADER_AUTH_USER_ID);
+            String authId = (forwardedAuthId != null && !forwardedAuthId.isEmpty()) ? forwardedAuthId : principal;
             return exchange.mutate().request(exchange.getRequest().mutate()
                 .headers(headers -> headers.remove(HTTP_HEADER_AUTH_USER_ID))
-                .header(HTTP_HEADER_AUTH_USER_ID, principal)
+                .header(HTTP_HEADER_AUTH_USER_ID, authId)
                 .build()).build();
         }).flatMap(chain::filter).then(Mono.fromRunnable(() -> {
 
